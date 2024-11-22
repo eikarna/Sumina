@@ -3,7 +3,7 @@ const app = express();
 const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./middlewares/swagger");
-const rateLimit = require("./middlewares/ratelimit");
+// onst rateLimit = require("./middlewares/ratelimit");
 
 let bbb = 0;
 
@@ -17,7 +17,7 @@ const apii = require(path.join(__dirname, "./api"));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Apply Rate limits
-app.use(rateLimit);
+// app.use(rateLimit);
 
 // Apply JSON Parser
 app.use(express.json());
@@ -56,7 +56,7 @@ app.use((req, res) => {
 });
 
 // Enable trust proxy for Rate Limiter
-app.enable("trust proxy");
+// app.enable("trust proxy");
 
 // Export untuk Vercel
 module.exports = app;
