@@ -141,9 +141,9 @@ async function updateBinary() {
   const { unlink } = require("fs/promises");
   petParsed = path.join(
     __dirname,
-    p().startsWith("win") ? "../utils/yt-dlp.exe" : "../utils/yt-dlp"
+    p().startsWith("win") ? "../../utils/yt-dlp.exe" : "../../utils/yt-dlp"
   );
-  
+
   const { readdir } = require("fs/promises");
   const { dirname } = require("path");
 
