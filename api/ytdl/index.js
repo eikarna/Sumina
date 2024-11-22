@@ -140,21 +140,9 @@ async function mp4(url, resol) {
 async function updateBinary() {
   const { unlink } = require("fs/promises");
   petParsed = path.join(
-    __dirname,
-    p().startsWith("win") ? "../../utils/yt-dlp.exe" : "../../utils/yt-dlp"
+    os.tmpdir(), // Menggunakan folder temporary sistem
+    p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
   );
-
-  const { readdir } = require("fs/promises");
-  const { dirname } = require("path");
-
-  try {
-    const dir = dirname(petParsed);
-    const files = await readdir(dir);
-    console.log("Daftar file di direktori:", dir);
-    console.log(files);
-  } catch (error) {
-    console.error("Gagal membaca direktori:", error);
-  }
 
   try {
     if (es(petParsed)) {
