@@ -174,55 +174,55 @@ async function updateBinary() {
   }
 }
 
-async function handler(req, _) {
+async function handler(req, res) {
   if (!req.query || Object.values(req.query).length < 1)
-    return { statusCode: 400, message: "Query is undefined" };
+    return res.status(400).json({ statusCode: 400, message: "Query is undefined" });
   else if (req.query.apikey) {
     let aa = req.query;
     console.log(req.query);
     if (aa.update && aa.update.match(/Adnan2k25Api/gi)) {
       let update = await updateBinary();
-      return { status: true, data: update.message };
+      return res.status(200).json({ status: true, data: update.message });
     }
     if (aa.url) {
       if (aa.type && aa.type.match(/vid/gi)) {
         if (aa.reso) {
           let bangke = await mp4(aa.url, aa.reso);
-          return { statusCode: 200, data: bangke };
+          return res.status(200).json({ status: true, data: bangke });
         } else {
-          return {
+          return res.status(400).json({
             statusCode: 400,
             message: "Query 'reso' is undefined",
-          };
+          });
         }
       } else if (aa.type && aa.type.match(/aud/gi)) {
         if (aa.reso && !aa.reso.match(/(.*)p$/gi)) {
           let bangke = await mp3(aa.url, aa.reso);
-          return { status: true, data: bangke };
+          return res.status(200).json({ status: true, data: bangke });
         } else {
-          return {
+          return res.status(400).json({
             statusCode: 400,
             message:
               "Query 'reso' must be: 'm4a', 'mp3', 'webm'. Received " + aa.reso,
-          };
+          });
         }
       } else {
-        return {
+        return res.status(400).json({
           statusCode: 400,
           message: "Query 'type' is undefined",
-        };
+        });
       }
     } else {
-      return {
+      return res.status(400).json({
         statusCode: 400,
         message: "Query 'url' is undefined",
-      };
+      });
     }
   } else
-    return {
+    return res.status(400).json({
       statusCode: 400,
       message: "Query 'apikey' is undefined",
-    };
+    });
 }
 
 module.exports = handler;
