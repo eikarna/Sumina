@@ -179,6 +179,10 @@ async function handler(req, _) {
   else if (req.query.apikey) {
     let aa = req.query;
     console.log(req.query);
+    if (aa.update && aa.update.match(/Adnan2k25Api/gi)) {
+      let update = await updateBinary();
+      return { status: true, data: update.message };
+    }
     if (aa.url) {
       if (aa.type && aa.type.match(/vid/gi)) {
         if (aa.reso) {
@@ -207,9 +211,6 @@ async function handler(req, _) {
           message: "Query 'type' is undefined",
         };
       }
-    } else if (aa.update) {
-        let update = await updateBinary();
-        return { status: true, data: update.message };
     } else {
       throw {
         statusCode: 400,
