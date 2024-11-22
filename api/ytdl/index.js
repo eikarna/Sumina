@@ -1,7 +1,4 @@
-const ydp = require("yt-dlp-wrap").default;
-const { existsSync: es } = require("fs");
-const path = require("path");
-const { platform: p } = require("os");
+const play = require('play-dl');
 
 /**
  * @swagger
@@ -21,212 +18,142 @@ const { platform: p } = require("os");
  *     responses:
  *       200:
  *         description: JSON Object as responses.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
  */
 
-let searchVid = (property_value, array) => {
-  let asHeight = property_value.substr(0, property_value.length - 1);
-  console.log(asHeight);
-  for (let i = 0; i < array.length; i++) {
-    if (array[i].height === asHeight && array[i].acodec !== "none") {
-      // delete unwanted keys
-      delete array[i].http_headers;
-      delete array[i].downloader_options;
-      delete array[i].protocol;
-      delete array[i].language;
-      delete array[i].language_preference;
-      delete array[i].format_id;
-      delete array[i].source_preference;
-      delete array[i].aspect_ratio;
-      delete array[i].format;
-      delete array[i].preference;
-      return array[i];
-    }
-  }
-};
-
-let searchAud = (property_value, array) => {
-  for (let i = 0; i < array.length; i++) {
-    console.log(array);
-    if (array[i].ext === property_value && array[i].acodec !== "none") {
-      // delete unwanted keys
-      delete array[i].http_headers;
-      delete array[i].downloader_options;
-      delete array[i].protocol;
-      delete array[i].language;
-      delete array[i].language_preference;
-      delete array[i].format_id;
-      delete array[i].source_preference;
-      delete array[i].aspect_ratio;
-      delete array[i].format;
-      delete array[i].preference;
-      console.log(array[i]);
-      return array[i];
-    }
-  }
-};
-
-async function mp3(url, resol) {
-  const { tmpdir } = require("os");
-  petParsed = path.join(
-    tmpdir(), // Menggunakan folder temporary sistem
-    p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
-  );
-
-  if (!es(petParsed)) {
-    console.log("Downloading yt-dlp binary... Please wait..");
-    await ydp.downloadFromGithub(petParsed, "2024.03.10", p());
-  }
-  let yd = new ydp(petParsed);
-  let rawOut = await yd.execPromise(["--dump-json", url]);
-
-  if (!rawOut || rawOut.length < 1) return "Error parsing metadata.";
-
-  let parsedJson = JSON.parse(rawOut);
-
-  let downList = searchAud(resol, parsedJson.formats);
-
-  return {
-    title: parsedJson.title,
-    thumbnail: parsedJson.thumbnail,
-    duration: parsedJson.releaseTimestamp,
-    duration_string: parsedJson.duration_string,
-    likes: parsedJson.like_count,
-    views: parsedJson.view_count,
-    upload_date_string: parsedJson.upload_date,
-    uploader: parsedJson.uploader,
-    audio: downList,
-  };
-}
-
-async function mp4(url, resol) {
-  const { tmpdir } = require("os");
-  petParsed = path.join(
-    tmpdir(), // Menggunakan folder temporary sistem
-    p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
-  );
-
-  if (!es(petParsed)) {
-    console.log("Downloading yt-dlp binary... Please wait..");
-
-    await ydp.downloadFromGithub(petParsed, "2024.03.10", p());
-  }
-
-  let yd = new ydp(petParsed);
-
-  let rawOut = await yd.execPromise(["--dump-json", url]);
-
-  if (!rawOut || rawOut.length < 1) return "Error parsing metadata.";
-
-  let parsedJson = JSON.parse(rawOut);
-
-  let downList = searchVid(resol, parsedJson.formats);
-
-  // console.log(downList);
-
-  return {
-    title: parsedJson.title,
-    desc: parsedJson.description,
-    thumbnail: parsedJson.thumbnail,
-    duration: parsedJson.releaseTimestamp,
-    duration_string: parsedJson.duration_string,
-    likes: parsedJson.like_count,
-    views: parsedJson.view_count,
-    upload_date_string: parsedJson.upload_date,
-    uploader: parsedJson.uploader,
-    video: downList,
-  };
-}
-
-async function updateBinary() {
-  const { unlink } = require("fs/promises");
-  const { tmpdir } = require("os");
-  petParsed = path.join(
-    tmpdir(), // Menggunakan folder temporary sistem
-    p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
-  );
-
+async function mp3(url, format = 'mp3') {
   try {
-    if (es(petParsed)) {
-      await unlink(petParsed);
-      console.log("Binary lama berhasil dihapus");
-    }
-
-    // Ambil versi terbaru dari Github
-    const releases = await ydp.getGithubReleases(1, 1);
-    const latestVersion = releases[0].tag_name;
-
-    // Download versi terbaru
-    console.log("Mengunduh binary terbaru...");
-    await ydp.downloadFromGithub(petParsed, latestVersion, p());
-    console.log(`Binary berhasil diperbarui ke versi ${latestVersion}`);
-
+    const videoInfo = await play.video_info(url);
+    const audioFormats = await videoInfo.format().filter(f => f.isAudioOnly);
+    
+    // Pilih format audio yang sesuai
+    const selectedFormat = audioFormats.find(f => f.codec.includes(format)) || audioFormats[0];
+    
+    // Format data sesuai dengan struktur response yang diinginkan
     return {
-      status: true,
-      message: `Binary berhasil diperbarui ke versi ${latestVersion}`,
+      title: videoInfo.video_details.title,
+      thumbnail: videoInfo.video_details.thumbnail.url,
+      duration: videoInfo.video_details.durationInSec,
+      duration_string: new Date(videoInfo.video_details.durationInSec * 1000).toISOString().substr(11, 8),
+      likes: videoInfo.video_details.likes,
+      views: videoInfo.video_details.views,
+      upload_date_string: new Date(videoInfo.video_details.uploadedAt).toISOString().split('T')[0].replace(/-/g, ''),
+      uploader: videoInfo.video_details.channel.name,
+      audio: {
+        url: selectedFormat.url,
+        filesize: selectedFormat.size,
+        ext: format,
+        acodec: selectedFormat.codec,
+        quality: selectedFormat.quality
+      }
     };
   } catch (error) {
-    console.error("Gagal memperbarui binary:", error);
+    console.error("Error in mp3:", error);
+    throw error;
+  }
+}
+
+async function mp4(url, resolution) {
+  try {
+    const videoInfo = await play.video_info(url);
+    const videoFormats = await videoInfo.format();
+    
+    // Pilih format video berdasarkan resolusi
+    const height = parseInt(resolution);
+    const selectedFormat = videoFormats.find(f => 
+      f.quality === resolution && f.hasAudio
+    ) || videoFormats[0];
+
     return {
-      status: false,
-      message: "Gagal memperbarui binary",
-      error: error.message,
+      title: videoInfo.video_details.title,
+      desc: videoInfo.video_details.description,
+      thumbnail: videoInfo.video_details.thumbnail.url,
+      duration: videoInfo.video_details.durationInSec,
+      duration_string: new Date(videoInfo.video_details.durationInSec * 1000).toISOString().substr(11, 8),
+      likes: videoInfo.video_details.likes,
+      views: videoInfo.video_details.views,
+      upload_date_string: new Date(videoInfo.video_details.uploadedAt).toISOString().split('T')[0].replace(/-/g, ''),
+      uploader: videoInfo.video_details.channel.name,
+      video: {
+        url: selectedFormat.url,
+        filesize: selectedFormat.size,
+        ext: 'mp4',
+        width: selectedFormat.width,
+        height: selectedFormat.height,
+        fps: selectedFormat.fps,
+        vcodec: selectedFormat.codec,
+        acodec: selectedFormat.audioCodec
+      }
     };
+  } catch (error) {
+    console.error("Error in mp4:", error);
+    throw error;
   }
 }
 
 async function handler(req, res) {
-  if (!req.query || Object.values(req.query).length < 1)
+  if (!req.query || Object.values(req.query).length < 1) {
     return res.status(400).json({ statusCode: 400, message: "Query is undefined" });
-  else if (req.query.apikey) {
-    let aa = req.query;
-    console.log(req.query);
-    if (aa.update && aa.update.match(/Adnan2k25Api/gi)) {
-      let update = await updateBinary();
-      return res.status(200).json({ status: true, data: update.message });
-    }
-    if (aa.url) {
-      if (aa.type && aa.type.match(/vid/gi)) {
-        if (aa.reso) {
-          let bangke = await mp4(aa.url, aa.reso);
-          return res.status(200).json({ status: true, data: bangke });
-        } else {
-          return res.status(400).json({
-            statusCode: 400,
-            message: "Query 'reso' is undefined",
-          });
-        }
-      } else if (aa.type && aa.type.match(/aud/gi)) {
-        if (aa.reso && !aa.reso.match(/(.*)p$/gi)) {
-          let bangke = await mp3(aa.url, aa.reso);
-          return res.status(200).json({ status: true, data: bangke });
-        } else {
-          return res.status(400).json({
-            statusCode: 400,
-            message:
-              "Query 'reso' must be: 'm4a', 'mp3', 'webm'. Received " + aa.reso,
-          });
-        }
-      } else {
-        return res.status(400).json({
-          statusCode: 400,
-          message: "Query 'type' is undefined",
-        });
-      }
-    } else {
-      return res.status(400).json({
-        statusCode: 400,
-        message: "Query 'url' is undefined",
-      });
-    }
-  } else
+  }
+  
+  if (!req.query.apikey) {
     return res.status(400).json({
       statusCode: 400,
-      message: "Query 'apikey' is undefined",
+      message: "Query 'apikey' is undefined"
     });
+  }
+
+  const { url, type, reso } = req.query;
+
+  try {
+    if (!url) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Query 'url' is undefined"
+      });
+    }
+
+    if (!type) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Query 'type' is undefined"
+      });
+    }
+
+    if (type.match(/vid/gi)) {
+      if (!reso) {
+        return res.status(400).json({
+          statusCode: 400,
+          message: "Query 'reso' is undefined"
+        });
+      }
+      const result = await mp4(url, reso);
+      return res.status(200).json({ status: true, data: result });
+    } 
+    
+    if (type.match(/aud/gi)) {
+      if (!reso || reso.match(/(.*)p$/gi)) {
+        return res.status(400).json({
+          statusCode: 400,
+          message: "Query 'reso' must be: 'm4a', 'mp3', 'webm'. Received " + reso
+        });
+      }
+      const result = await mp3(url, reso);
+      return res.status(200).json({ status: true, data: result });
+    }
+
+    return res.status(400).json({
+      statusCode: 400,
+      message: "Invalid type. Must be 'vid' or 'aud'"
+    });
+
+  } catch (error) {
+    console.error("Handler error:", error);
+    return res.status(500).json({
+      statusCode: 500,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
 }
 
 module.exports = handler;
