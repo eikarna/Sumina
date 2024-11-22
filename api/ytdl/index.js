@@ -141,7 +141,7 @@ async function updateBinary() {
   const { unlink } = require("fs/promises");
   const { tmpdir } = require("os");
   petParsed = path.join(
-    tmpdir, // Menggunakan folder temporary sistem
+    tmpdir(), // Menggunakan folder temporary sistem
     p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
   );
 
