@@ -71,9 +71,10 @@ let searchAud = (property_value, array) => {
 
 async function mp3(url, resol) {
   petParsed = path.join(
-    __dirname,
-    p().startsWith("win") ? "../utils/yt-dlp.exe" : "../utils/yt-dlp"
+    tmpdir(), // Menggunakan folder temporary sistem
+    p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
   );
+
   if (!es(petParsed)) {
     console.log("Downloading yt-dlp binary... Please wait..");
     await ydp.downloadFromGithub(petParsed, "2024.03.10", p());
@@ -102,9 +103,10 @@ async function mp3(url, resol) {
 
 async function mp4(url, resol) {
   petParsed = path.join(
-    __dirname,
-    p().startsWith("win") ? "../utils/yt-dlp.exe" : "../utils/yt-dlp"
+    tmpdir(), // Menggunakan folder temporary sistem
+    p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
   );
+
   if (!es(petParsed)) {
     console.log("Downloading yt-dlp binary... Please wait..");
 
