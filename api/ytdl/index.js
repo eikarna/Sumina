@@ -70,6 +70,7 @@ let searchAud = (property_value, array) => {
 };
 
 async function mp3(url, resol) {
+  const { tmpdir } = require("os");
   petParsed = path.join(
     tmpdir(), // Menggunakan folder temporary sistem
     p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
@@ -102,6 +103,7 @@ async function mp3(url, resol) {
 }
 
 async function mp4(url, resol) {
+  const { tmpdir } = require("os");
   petParsed = path.join(
     tmpdir(), // Menggunakan folder temporary sistem
     p().startsWith("win") ? "yt-dlp.exe" : "yt-dlp"
