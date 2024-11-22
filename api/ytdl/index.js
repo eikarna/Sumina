@@ -137,6 +137,42 @@ async function mp4(url, resol) {
   };
 }
 
+async function updateBinary() {
+  const { unlink } = require('fs/promises');
+  petParsed = path.join(
+    __dirname,
+    p().startsWith("win") ? "../utils/yt-dlp.exe" : "../utils/yt-dlp"
+  );
+  
+  try {
+    if (es(petParsed)) {
+      await unlink(petParsed);
+      console.log("Binary lama berhasil dihapus");
+    }
+    
+    // Ambil versi terbaru dari Github
+    const releases = await ydp.getGithubReleases(1, 1);
+    const latestVersion = releases[0].tag_name;
+    
+    // Download versi terbaru
+    console.log("Mengunduh binary terbaru...");
+    await ydp.downloadFromGithub(petParsed, latestVersion, p());
+    console.log(`Binary berhasil diperbarui ke versi ${latestVersion}`);
+    
+    return {
+      status: true,
+      message: `Binary berhasil diperbarui ke versi ${latestVersion}`
+    };
+  } catch (error) {
+    console.error("Gagal memperbarui binary:", error);
+    throw {
+      status: false,
+      message: "Gagal memperbarui binary",
+      error: error.message
+    };
+  }
+}
+
 async function handler(req, _) {
   if (!req.query || Object.values(req.query).length < 1)
     throw { statusCode: 400, message: "Query is undefined" };
@@ -165,6 +201,9 @@ async function handler(req, _) {
               "Query 'reso' must be: 'm4a', 'mp3', 'webm'. Received " + aa.reso,
           };
         }
+      } else if (aa.type && aa.type.match(/update/gi)) {
+        let update = await updateBinary();
+        return { status: true, data: update.message };
       } else {
         throw {
           statusCode: 400,

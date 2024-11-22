@@ -55,5 +55,8 @@ app.use((req, res) => {
   });
 });
 
+// Enable trust proxy for Rate Limiter
+app.enable("trust proxy");
+
 // Export untuk Vercel
 module.exports = app;
