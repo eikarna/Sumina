@@ -81,7 +81,7 @@ async function mp3(url, resol) {
   let yd = new ydp(petParsed);
   let rawOut = await yd.execPromise(["--dump-json", url]);
 
-  if (!rawOut || rawOut.length < 1) throw "Error parsing metadata.";
+  if (!rawOut || rawOut.length < 1) return "Error parsing metadata.";
 
   let parsedJson = JSON.parse(rawOut);
 
@@ -115,7 +115,7 @@ async function mp4(url, resol) {
 
   let rawOut = await yd.execPromise(["--dump-json", url]);
 
-  if (!rawOut || rawOut.length < 1) throw "Error parsing metadata.";
+  if (!rawOut || rawOut.length < 1) return "Error parsing metadata.";
 
   let parsedJson = JSON.parse(rawOut);
 
@@ -138,44 +138,56 @@ async function mp4(url, resol) {
 }
 
 async function updateBinary() {
-  const { unlink } = require('fs/promises');
+  const { unlink } = require("fs/promises");
   petParsed = path.join(
     __dirname,
     p().startsWith("win") ? "../utils/yt-dlp.exe" : "../utils/yt-dlp"
   );
   
+  const { readdir } = require("fs/promises");
+  const { dirname } = require("path");
+
+  try {
+    const dir = dirname(petParsed);
+    const files = await readdir(dir);
+    console.log("Daftar file di direktori:", dir);
+    console.log(files);
+  } catch (error) {
+    console.error("Gagal membaca direktori:", error);
+  }
+
   try {
     if (es(petParsed)) {
       await unlink(petParsed);
       console.log("Binary lama berhasil dihapus");
     }
-    
+
     // Ambil versi terbaru dari Github
     const releases = await ydp.getGithubReleases(1, 1);
     const latestVersion = releases[0].tag_name;
-    
+
     // Download versi terbaru
     console.log("Mengunduh binary terbaru...");
     await ydp.downloadFromGithub(petParsed, latestVersion, p());
     console.log(`Binary berhasil diperbarui ke versi ${latestVersion}`);
-    
+
     return {
       status: true,
-      message: `Binary berhasil diperbarui ke versi ${latestVersion}`
+      message: `Binary berhasil diperbarui ke versi ${latestVersion}`,
     };
   } catch (error) {
     console.error("Gagal memperbarui binary:", error);
-    throw {
+    return {
       status: false,
       message: "Gagal memperbarui binary",
-      error: error.message
+      error: error.message,
     };
   }
 }
 
 async function handler(req, _) {
   if (!req.query || Object.values(req.query).length < 1)
-    throw { statusCode: 400, message: "Query is undefined" };
+    return { statusCode: 400, message: "Query is undefined" };
   else if (req.query.apikey) {
     let aa = req.query;
     console.log(req.query);
@@ -189,7 +201,7 @@ async function handler(req, _) {
           let bangke = await mp4(aa.url, aa.reso);
           return { statusCode: 200, data: bangke };
         } else {
-          throw {
+          return {
             statusCode: 400,
             message: "Query 'reso' is undefined",
           };
@@ -199,27 +211,26 @@ async function handler(req, _) {
           let bangke = await mp3(aa.url, aa.reso);
           return { status: true, data: bangke };
         } else {
-          throw {
+          return {
             statusCode: 400,
             message:
               "Query 'reso' must be: 'm4a', 'mp3', 'webm'. Received " + aa.reso,
           };
         }
       } else {
-        throw {
+        return {
           statusCode: 400,
           message: "Query 'type' is undefined",
         };
       }
     } else {
-      throw {
+      return {
         statusCode: 400,
         message: "Query 'url' is undefined",
       };
     }
-    
   } else
-    throw {
+    return {
       statusCode: 400,
       message: "Query 'apikey' is undefined",
     };
