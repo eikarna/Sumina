@@ -201,21 +201,22 @@ async function handler(req, _) {
               "Query 'reso' must be: 'm4a', 'mp3', 'webm'. Received " + aa.reso,
           };
         }
-      } else if (aa.type && aa.type.match(/update/gi)) {
-        let update = await updateBinary();
-        return { status: true, data: update.message };
       } else {
         throw {
           statusCode: 400,
           message: "Query 'type' is undefined",
         };
       }
+    } else if (aa.update) {
+        let update = await updateBinary();
+        return { status: true, data: update.message };
     } else {
       throw {
         statusCode: 400,
         message: "Query 'url' is undefined",
       };
     }
+    
   } else
     throw {
       statusCode: 400,
