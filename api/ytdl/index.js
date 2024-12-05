@@ -1,4 +1,4 @@
-const play = require('play-dl');
+const play = require('@vookav2/play-dl');
 
 /**
  * @swagger
@@ -55,18 +55,19 @@ async function mp3(url, format = 'mp3') {
 async function mp4(url, resolution) {
   try {
     const videoInfo = await play.video_info(url);
-    const videoFormats = await videoInfo.format();
+    const videoFormats = videoInfo.format || [];
     
     // Pilih format video berdasarkan resolusi
     const height = parseInt(resolution);
     const selectedFormat = videoFormats.find(f => 
       f.quality === resolution && f.hasAudio
     ) || videoFormats[0];
+    console.log("\n\nSelected Formats:\n", selectedFormat);
 
     return {
       title: videoInfo.video_details.title,
       desc: videoInfo.video_details.description,
-      thumbnail: videoInfo.video_details.thumbnail.url,
+      thumbnail: videoInfo.video_details.thumbnails[videoInfo.video_details.thumbnails.length - 1].url,
       duration: videoInfo.video_details.durationInSec,
       duration_string: new Date(videoInfo.video_details.durationInSec * 1000).toISOString().substr(11, 8),
       likes: videoInfo.video_details.likes,
